@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rental Management – Admin</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginView" class="auth-wrap" hidden>
+  <div class="auth-card">
+    <h1>RENTAL MANAGEMENT</h1>
+    <p class="sub">Admin sign in</p>
+    <div id="configWarn" class="warn" hidden>Supabase is not configured yet. Open <b>js/config.js</b> and paste your project URL and anon key.</div>
+    <form id="loginForm" novalidate>
+      <div class="field"><label>Email</label><input name="email" type="email" autocomplete="username" placeholder="admin@example.com"><small class="field-error" data-error-for="email"></small></div>
+      <div class="field"><label>Password</label><input name="password" type="password" autocomplete="current-password"><small class="field-error" data-error-for="password"></small></div>
+      <div class="auth-msg" id="loginMsg"></div>
+      <button class="btn btn-primary btn-block" id="loginBtn">LOGIN</button>
+      <p style="text-align:center;margin:14px 0 0"><button type="button" class="btn btn-ghost btn-sm" id="forgotBtn">Forgot password?</button></p>
+    </form>
+    <p style="text-align:center"><a href="index.html">← Back</a></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appView" class="app" hidden>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">RENTAL MANAGEMENT</div>
+    <nav class="nav">
+      <a href="#dashboard" data-page="dashboard">Dashboard</a>
+      <a href="#items" data-page="items">Items</a>
+      <a href="#customers" data-page="customers">Customers</a>
+      <a href="#rentals" data-page="rentals">Rentals</a>
+      <a href="#payments" data-page="payments">Payments</a>
+      <a href="#reports" data-page="reports">Reports</a>
+      <a href="#settings" data-page="settings">Settings</a>
+      <button id="logoutBtn">Logout</button>
+    </nav>
+    <div class="me" id="adminEmail"></div>
+  </aside>
+  <div style="flex:1;min-width:0">
+    <div class="topbar"><button id="menuBtn" aria-label="Menu">☰</button><b>RENTAL MANAGEMENT</b></div>
+    <main class="main" id="content"></main>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="common.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

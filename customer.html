@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Rental</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="loginView" class="auth-wrap" hidden>
+  <div class="auth-card">
+    <h1>MY RENTAL</h1>
+    <p class="sub">Log in with the Customer ID and PIN given by the shop</p>
+    <div id="configWarn" class="warn" hidden>Supabase is not configured yet. Open <b>js/config.js</b> and paste your project URL and anon key.</div>
+    <form id="loginForm" novalidate>
+      <div class="field"><label>Customer ID</label><input name="cid" placeholder="CUS-0001" autocapitalize="characters" autocomplete="off"><small class="field-error" data-error-for="cid"></small></div>
+      <div class="field"><label>PIN (6 digits)</label><input name="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off"><small class="field-error" data-error-for="pin"></small></div>
+      <div class="auth-msg" id="loginMsg"></div>
+      <button class="btn btn-primary btn-block" id="loginBtn">LOGIN</button>
+    </form>
+    <p class="muted" style="font-size:12px;text-align:center">Your name, phone number and rental details are stored by the shop only to manage your rental.</p>
+    <p style="text-align:center"><a href="index.html">← Back</a></p>
+  </div>
+</div>
+
+<div id="appView" class="portal" hidden>
+  <div class="portal-top"><h1>MY RENTAL</h1>
+    <div><button class="btn btn-light btn-sm" id="refreshBtn">↻ Refresh</button> <button class="btn btn-light btn-sm" id="logoutBtn">Logout</button></div></div>
+  <div id="portalBody"></div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="common.js"></script>
+<script src="customer.js"></script>
+</body>
+</html>

@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rental Management – Admin</title>
+<title>Power Tools – Admin</title>
+<link rel="icon" href="images/logo.svg">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,7 +12,8 @@
 <!-- LOGIN -->
 <div id="loginView" class="auth-wrap" hidden>
   <div class="auth-card">
-    <h1>RENTAL MANAGEMENT</h1>
+    <img class="auth-logo" src="logo.jpg" alt="Power Tools logo" onerror="this.onerror=null;this.src='images/logo.svg'">
+    <h1>POWER TOOLS</h1>
     <p class="sub">Admin sign in</p>
     <div id="configWarn" class="warn" hidden>Supabase is not configured yet. Open <b>js/config.js</b> and paste your project URL and anon key.</div>
     <form id="loginForm" novalidate>
@@ -21,14 +23,14 @@
       <button class="btn btn-primary btn-block" id="loginBtn">LOGIN</button>
       <p style="text-align:center;margin:14px 0 0"><button type="button" class="btn btn-ghost btn-sm" id="forgotBtn">Forgot password?</button></p>
     </form>
-    <p style="text-align:center"><a href="index.html">← Back</a></p>
+    <p style="text-align:center;margin-bottom:0"><a href="customer.html">Customer? View my rental →</a></p>
   </div>
 </div>
 
 <!-- APP -->
 <div id="appView" class="app" hidden>
   <aside class="sidebar" id="sidebar">
-    <div class="brand">RENTAL MANAGEMENT</div>
+    <div class="brand"><img src="logo.jpg" alt="" onerror="this.onerror=null;this.src='images/logo.svg'"><span>POWER TOOLS</span></div>
     <nav class="nav">
       <a href="#dashboard" data-page="dashboard">Dashboard</a>
       <a href="#items" data-page="items">Items</a>
@@ -42,7 +44,7 @@
     <div class="me" id="adminEmail"></div>
   </aside>
   <div style="flex:1;min-width:0">
-    <div class="topbar"><button id="menuBtn" aria-label="Menu">☰</button><b>RENTAL MANAGEMENT</b></div>
+    <div class="topbar"><button id="menuBtn" aria-label="Menu">☰</button><img src="images/logo.png" alt="" onerror="this.onerror=null;this.src='images/logo.svg'"><b>POWER TOOLS</b></div>
     <main class="main" id="content"></main>
   </div>
 </div>

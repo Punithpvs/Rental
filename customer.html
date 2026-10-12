@@ -3,29 +3,52 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>My Rental</title>
+<title>Power Tools – My Rental</title>
+<link rel="icon" href="logo.svg">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="loginView" class="auth-wrap" hidden>
   <div class="auth-card">
-    <h1>MY RENTAL</h1>
-    <p class="sub">Log in with the Customer ID and PIN given by the shop</p>
+    <img class="auth-logo" src="logo.jpg" alt="Power Tools logo" onerror="this.onerror=null;this.src='images/logo.svg'">
+    <h1>POWER TOOLS</h1>
+    <p class="sub">MY RENTAL – enter the Customer ID given by the shop</p>
     <div id="configWarn" class="warn" hidden>Supabase is not configured yet. Open <b>js/config.js</b> and paste your project URL and anon key.</div>
     <form id="loginForm" novalidate>
       <div class="field"><label>Customer ID</label><input name="cid" placeholder="CUS-0001" autocapitalize="characters" autocomplete="off"><small class="field-error" data-error-for="cid"></small></div>
-      <div class="field"><label>PIN (6 digits)</label><input name="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off"><small class="field-error" data-error-for="pin"></small></div>
       <div class="auth-msg" id="loginMsg"></div>
       <button class="btn btn-primary btn-block" id="loginBtn">LOGIN</button>
     </form>
     <p class="muted" style="font-size:12px;text-align:center">Your name, phone number and rental details are stored by the shop only to manage your rental.</p>
-    <p style="text-align:center"><a href="index.html">← Back</a></p>
+  </div>
+</div>
+
+<!-- Location consent gate (shown when the customer has an active rental) -->
+<div id="gateView" class="auth-wrap" hidden>
+  <div class="auth-card" style="max-width:460px">
+    <img class="auth-logo" src="logo.jpg" alt="Power Tools logo" onerror="this.onerror=null;this.src='images/logo.svg'">
+    <h1 style="font-size:20px">Location access needed</h1>
+    <p class="sub" id="gateWho"></p>
+    <div class="calc" style="font-size:14px">
+      <b>Why we ask:</b> you currently have rented items. The shop uses your location during an active rental so it can locate its equipment.
+      <ul style="margin:8px 0 0;padding-left:18px">
+        <li>Your location is shared <b>only while this page is open</b> and <b>only while you have an active rental</b>.</li>
+        <li>Only the shop owner can see it. It is kept for 30 days.</li>
+        <li>Sharing stops when the rental is marked as returned.</li>
+        <li>If you do not allow location, you cannot view your rental details.</li>
+      </ul>
+    </div>
+    <label class="check field"><input type="checkbox" id="gateConsent"><span>I understand and agree to share my location with Power Tools during this rental.</span></label>
+    <div class="auth-msg" id="gateMsg"></div>
+    <button class="btn btn-primary btn-block" id="gateAllow">ALLOW LOCATION &amp; CONTINUE</button>
+    <p style="text-align:center;margin-bottom:0"><button class="btn btn-ghost btn-sm" id="gateLogout">Not now – log out</button></p>
   </div>
 </div>
 
 <div id="appView" class="portal" hidden>
-  <div class="portal-top"><h1>MY RENTAL</h1>
+  <div class="portal-top">
+    <div class="who"><img class="top-logo" src="logo.jpg" alt="" onerror="this.onerror=null;this.src='logo.svg'"><div><h1 style="font-size:20px">POWER TOOLS</h1><small>MY RENTAL</small></div></div>
     <div><button class="btn btn-light btn-sm" id="refreshBtn">↻ Refresh</button> <button class="btn btn-light btn-sm" id="logoutBtn">Logout</button></div></div>
   <div id="portalBody"></div>
 </div>

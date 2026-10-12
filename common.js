@@ -40,13 +40,11 @@ const loading = () => '<div class="center-pad"><span class="spinner big"></span>
 const empty = t => `<div class="empty">${esc(t)}</div>`;
 const PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150"><rect width="100%" height="100%" fill="#e9edf5"/><text x="50%" y="50%" fill="#9aa5b8" font-family="sans-serif" font-size="14" text-anchor="middle" dominant-baseline="middle">No image</text></svg>');
 
+const fmtHour = h => { h = Number(h); return `${((h + 11) % 12) + 1}:00 ${h >= 12 ? 'PM' : 'AM'}`; };
 function policyText(p) {
   p = p || {};
-  const min = p.minimum_days ?? 1;
-  const base = p.billing_mode === 'inclusive'
-    ? 'Both the given date and the return/current date are charged.'
-    : 'Charged per calendar day from the given date up to (not including) the return/current date.';
-  return `${base} Minimum ${min} day${min === 1 ? '' : 's'}. Time zone: ${p.timezone || 'Asia/Kolkata'}.`;
+  const open = p.opening_hour ?? 9, close = p.closing_hour ?? 21;
+  return `Shop hours ${fmtHour(open)} – ${fmtHour(close)}. Items must be returned by ${fmtHour(close)} on the given date. If not, another day's rent is added after ${fmtHour(close)} each day. Time zone: ${p.timezone || 'Asia/Kolkata'}.`;
 }
 
 /* ---------- errors ---------- */

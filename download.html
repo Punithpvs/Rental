@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Power Tools Rental</title>
+<link rel="icon" type="image/jpg" size="32X32" href="logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at 20% 20%, #0e0e1a, #06060c);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      color: #f0f0f5;
+    }
+
+    .card {
+      max-width: 1100px;
+      width: 100%;
+      background: rgba(18, 20, 28, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 215, 0, 0.15);
+      border-radius: 3rem;
+      padding: 3rem 2.5rem;
+      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 200, 50, 0.1) inset;
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      box-shadow: 0 35px 60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 215, 0, 0.25) inset;
+    }
+
+    .hero {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 2.5rem;
+    }
+
+    .info-section { flex: 1 1 300px; }
+
+    /* ============ LOGO ============ */
+    .logo-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .logo-icon {
+      width: 92px;
+      height: 92px;
+      border-radius: 26px;
+      background: linear-gradient(145deg, #f5c542, #d99f1c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        0 15px 25px -5px rgba(245, 197, 66, 0.45),
+        0 0 0 2px rgba(255, 215, 0, 0.35) inset,
+        0 8px 12px -4px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      flex-shrink: 0;
+    }
+
+    .logo-icon::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 45%);
+      pointer-events: none;
+    }
+
+    .logo-icon:hover {
+      transform: scale(1.04) rotate(-2deg);
+      box-shadow:
+        0 20px 30px -5px rgba(245, 197, 66, 0.6),
+        0 0 0 2px rgba(255, 215, 0, 0.5) inset,
+        0 8px 12px -4px rgba(0, 0, 0, 0.6);
+    }
+
+    /* ⬇️ YOUR LOGO IMAGE STYLING ⬇️ */
+    .logo-icon img {
+      width: 78%;
+      height: 78%;
+      object-fit: contain;
+      position: relative;
+      z-index: 1;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35));
+    }
+
+    /* ============ APP NAME ============ */
+    .app-name {
+      font-size: 2.3rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      background: linear-gradient(to right, #ffffff, #e0e0f0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 2px 10px rgba(245, 197, 66, 0.2);
+    }
+
+    .app-name span {
+      display: block;
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: #b9b9d0;
+      margin-top: 0.3rem;
+      background: none;
+      -webkit-background-clip: unset;
+      background-clip: unset;
+      text-shadow: none;
+    }
+
+    .version-badge {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(255, 215, 0, 0.12);
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 1.8rem;
+    }
+
+    .version-badge i { color: #f5c542; margin-right: 8px; }
+    .version-badge .ver { color: #f5c542; margin-left: 6px; font-weight: 700; }
+
+    .description {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: #c7c7dd;
+      margin-bottom: 2.5rem;
+      max-width: 500px;
+      border-left: 4px solid #f5c542;
+      padding-left: 1.3rem;
+    }
+
+    /* ============ DOWNLOAD BUTTON ============ */
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: linear-gradient(135deg, #ffdb5c, #e6b422);
+      border: none;
+      padding: 1.1rem 3rem 1.1rem 2.6rem;
+      border-radius: 60px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #0a0a12;
+      cursor: pointer;
+      box-shadow: 0 20px 30px -10px rgba(230, 180, 34, 0.5), 0 0 0 2px rgba(255, 255, 255, 0.2) inset;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      letter-spacing: 0.5px;
+      width: fit-content;
+    }
+
+    .download-btn i { font-size: 1.5rem; transition: transform 0.2s; }
+
+    .download-btn:hover {
+      background: linear-gradient(135deg, #ffe074, #f0c13d);
+      box-shadow: 0 25px 35px -8px #f5c542, 0 0 0 2px rgba(255, 255, 255, 0.3) inset;
+      transform: scale(1.02);
+    }
+
+    .download-btn:hover i { transform: translateY(3px); }
+    .download-btn:active { transform: scale(0.98); }
+
+    .download-hint {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #8a8aa0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      max-width: 500px;
+    }
+    .download-hint i { color: #f5c542; }
+
+    /* ============ VISUAL SHOWCASE ============ */
+    .visual-showcase {
+      flex: 1 1 300px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 215, 0, 0.03);
+      border-radius: 3rem;
+      padding: 2rem 1.5rem;
+      border: 1px solid rgba(255, 215, 0, 0.1);
+      box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .tool-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.8rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .tool-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.8rem;
+      transition: transform 0.25s ease;
+    }
+
+    .tool-item:hover { transform: translateY(-6px); }
+
+    .tool-circle {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(145deg, #1e1e2b, #13131c);
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 15px 20px -10px black, 0 0 0 2px rgba(245, 197, 66, 0.4);
+    }
+
+    .tool-circle i {
+      font-size: 3.5rem;
+      color: #f5c542;
+      filter: drop-shadow(0 4px 6px black);
+    }
+
+    .tool-label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #b6b6d0;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+      color: #9f9fb9;
+      font-size: 0.9rem;
+    }
+
+    .stats-row span { display: flex; align-items: center; gap: 6px; }
+    .stats-row i { color: #f5c542; }
+
+    @media (max-width: 700px) {
+      .card { padding: 2rem 1.5rem; border-radius: 2rem; }
+      .hero { flex-direction: column-reverse; text-align: center; }
+      .logo-wrapper { justify-content: center; }
+      .description { border-left: none; padding-left: 0; max-width: 100%; }
+      .download-btn { margin: 0 auto; }
+      .version-badge { margin-left: auto; margin-right: auto; }
+      .info-section { display: flex; flex-direction: column; align-items: center; }
+      .download-hint { justify-content: center; text-align: center; }
+    }
+
+    @media (max-width: 480px) {
+      .logo-icon { width: 74px; height: 74px; border-radius: 22px; }
+      .tool-circle { width: 75px; height: 75px; border-radius: 22px; }
+      .tool-circle i { font-size: 2.5rem; }
+      .app-name { font-size: 1.8rem; }
+      .download-btn { font-size: 1.1rem; padding: 0.9rem 2rem 0.9rem 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="hero">
+      <div class="info-section">
+        <div class="logo-wrapper">
+          <!-- ============ YOUR LOGO HERE ============ -->
+          <div class="logo-icon" aria-label="Power Tools Rental logo">
+            <img src="logo.jpg" alt="Power Tools Rental logo">
+          </div>
+
+          <div class="app-name">
+            Power Tools<br>Rental
+            <span>heavy duty</span>
+          </div>
+        </div>
+
+        <div class="version-badge">
+          <i class="fas fa-code-branch"></i>
+          Version <span class="ver">1.0.0</span>
+        </div>
+
+        <div class="description">
+          <i class="fas fa-bolt" style="color: #f5c542; margin-right: 8px;"></i>
+          Rent professional-grade power tools instantly. Drills, saws, sanders, and more —
+          built for contractors and DIY enthusiasts. Zero maintenance, full power.
+        </div>
+
+        <!-- ⬇️ DOWNLOAD BUTTON — replace the href with your Google Drive direct link ⬇️ -->
+        <a
+          href="https://drive.google.com/file/d/1TzJv9M8GyqPkqFvTFQuxEPPgB8nFPpLE/view?usp=drive_link"
+          class="download-btn"
+          id="downloadApkBtn"
+          download
+          rel="noopener"
+        >
+          <i class="fas fa-download"></i> Download APK
+        </a>
+
+        <div class="download-hint">
+          <i class="fas fa-shield-alt"></i>
+          If the download doesn't start, tap the button again, then allow "Install unknown apps".
+        </div>
+      </div>
+
+      <div class="visual-showcase">
+        <div class="tool-grid">
+          <div class="tool-item">
+            <div class="tool-circle"><i class="fas fa-screwdriver-wrench"></i></div>
+            <div class="tool-label">Drills</div>
+          </div>
+          <div class="tool-item">
+            <div class="tool-circle"><i class="fas fa-table-saw"></i></div>
+            <div class="tool-label">Saws</div>
+          </div>
+          <div class="tool-item">
+            <div class="tool-circle"><i class="fas fa-grip"></i></div>
+            <div class="tool-label">Sanders</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 0.5rem;">
+          <i class="fas fa-bolt" style="color:#f5c542; font-size: 1.5rem;"></i>
+          <i class="fas fa-battery-full" style="color:#f5c542; font-size: 1.5rem;"></i>
+          <i class="fas fa-shield-halved" style="color:#f5c542; font-size: 1.5rem;"></i>
+        </div>
+        <div class="stats-row">
+          <span><i class="fas fa-truck-fast"></i> 24/7</span>
+          <span><i class="fas fa-star"></i> 4.9</span>
+          <span><i class="fas fa-users"></i> 10k+</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

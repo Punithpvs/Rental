@@ -25,7 +25,7 @@ function logout() {
   $('#portalBody').innerHTML = ''; showLogin();
 }
 
-/* ---------- location (only with consent, only during an active rental, only while this page is open) ---------- */
+/* ---------- location ---------- */
 const getPosition = () => new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }));
 function geoMessage(err) {
   switch (err && err.code) {
@@ -59,7 +59,9 @@ function updateStatus() {
 }
 // Already agreed before and the browser still allows it -> no need to ask again
 async function tryAutoStart(data) {
-  if (!geoSupported || !window.isSecureContext || !data.location.consented) return false;
+  if (!geoSupported || !window.isSecureContext) return false;
+  const loc = data && data.location ? data.location : {};
+  if (!loc.consented) return false;
   try { const st = await navigator.permissions.query({ name: 'geolocation' }); if (st.state !== 'granted') return false; } catch { return false; }
   try { const pos = await getPosition(); await sendPosition(pos); startSharing(); return true; } catch { return false; }
 }
@@ -71,10 +73,10 @@ $('#gateAllow').addEventListener('click', async () => {
   if (!window.isSecureContext) { msg.textContent = 'Location needs a secure (https) connection.'; return; }
   await withBusy($('#gateAllow'), async () => {
     try {
-      const pos = await getPosition();                       // browser shows its own permission prompt here
+      const pos = await getPosition();
       const { data, error } = await sb.rpc('accept_location_consent', { p_customer_number: current });
       if (error) throw error;
-      if (!data.ok) { msg.textContent = data.message; return; }
+      if (!data || !data.ok) { msg.textContent = (data && data.message) || 'Could not save your consent.'; return; }
       await sendPosition(pos); startSharing();
       $('#gateConsent').checked = false;
       await load(current, false);
@@ -105,15 +107,23 @@ $('#refreshBtn').addEventListener('click', () => { if (current) load(current, fa
 async function load(customerNumber, fromLogin) {
   const { data, error } = await sb.rpc('customer_dashboard', { p_customer_number: customerNumber });
   if (error) throw error;
-  if (!data.ok) {
-    if (fromLogin) { $('#loginMsg').textContent = data.message; return false; }
-    localStorage.removeItem(KEY); showLogin(data.message); return false;
+  if (!data || !data.ok) {
+    const msg = (data && data.message) || 'Customer ID not found. Please check it and try again.';
+    if (fromLogin) { $('#loginMsg').textContent = msg; return false; }
+    localStorage.removeItem(KEY); showLogin(msg); return false;
   }
+
+  // Make sure these keys exist so nothing downstream reads from undefined
+  data.rentals  = data.rentals  || [];
+  data.payments = data.payments || [];
+  data.location = data.location || { required: false, consented: false };
+
   current = customerNumber; lastData = data;
+
   if (data.location.required) {
     if (!sharing && !await tryAutoStart(data)) { showGate(data); startRefresh(); return true; }
   } else {
-    stopSharing();            // rental returned or none: no more location collection
+    stopSharing();
   }
   showApp(); render(data); startRefresh();
   return true;
@@ -129,7 +139,7 @@ function render(d) {
   $('#portalBody').innerHTML = `
     <div class="card"><div class="profile"><span class="avatar xl">${esc(initials(c.full_name))}</span>
       <div><h2 style="margin:0">${esc(c.full_name)}</h2><div>Customer ID: <b>${esc(c.customer_number)}</b></div><div class="muted">Phone: ${esc(c.phone_masked)}</div></div></div></div>
-    ${d.location.required ? '<div class="calc" id="locStatus"></div>' : ''}
+    ${(d.location && d.location.required) ? '<div class="calc" id="locStatus"></div>' : ''}
     ${!d.rentals.length ? `<div class="card">${empty('You have no rentals yet.')}</div>` : d.rentals.map(r => rentalCard(r, payments.filter(p => p.rental_id === r.id))).join('')}
     <p class="muted" style="text-align:center;font-size:12px">Amounts are calculated automatically by the shop's system. You cannot change them here.</p>`;
   updateStatus();

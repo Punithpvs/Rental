@@ -25,6 +25,13 @@ function avatar(name, path, cls = '') {
   return u ? `<img class="avatar ${cls}" src="${esc(u)}" alt="">` : `<span class="avatar ${cls}">${esc(initials(name))}</span>`;
 }
 
+/* ---------- call helper ---------- */
+const callBtn = phone => phone
+  ? `<a class="btn btn-light btn-sm call-btn" href="tel:${esc(phone)}" title="Call ${esc(phone)}" onclick="event.stopPropagation()">
+       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+         <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.2 1l-2.3 2.2z"/>
+       </svg></a>`
+  : '';
 async function putImage(bucket, path, blob) {
   const { error } = await sb.storage.from(bucket).upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false });
   if (error) throw error;
@@ -276,7 +283,7 @@ function openItemForm(item = null) {
         m.close(); route();
       } catch (err) {
         if (up) removeFiles(ITEM_BUCKET, up.uploaded);
-        toast(friendlyError(err), 'error');   // form stays open and filled in
+        toast(friendlyError(err), 'error');
       }
     });
   });
@@ -304,13 +311,16 @@ async function loadCustomers() {
     if (tok !== custToken) return;
     if (error) throw error;
     await signPhotos(data.map(c => c.photo_path));
-    box.innerHTML = !data.length ? `<div class="card">${empty('No customers found.')}</div>` : `<div class="card"><div class="table-wrap"><table class="tbl clickable"><thead><tr><th>Customer</th><th>Phone</th><th>Address</th><th>Registered</th></tr></thead><tbody>${data.map(c => `
+    box.innerHTML = !data.length ? `<div class="card">${empty('No customers found.')}</div>` : `<div class="card"><div class="table-wrap"><table class="tbl clickable"><thead><tr><th>Customer</th><th>Phone</th><th>Reference</th><th>Referred by</th><th>Address</th><th>Registered</th></tr></thead><tbody>${data.map(c => `
       <tr data-customer="${c.id}"><td><div class="who">${avatar(c.full_name, c.photo_path)}<div><b>${esc(c.full_name)}</b><small>${esc(c.customer_number)}</small></div></div></td>
-      <td>${esc(c.phone_number)}</td><td>${esc(c.address || '—')}</td><td>${fmtDate(dateIn(c.created_at))}</td></tr>`).join('')}</tbody></table></div>${pagerHtml(custQ.page, count, PAGE)}</div>`;
+      <td><div class="phone-cell">${esc(c.phone_number)}${callBtn(c.phone_number)}</div></td>
+      <td>${c.reference_number
+      ? `<div class="phone-cell">${esc(c.reference_number)}${callBtn(c.reference_number)}</div>`
+      : '—'}</td><td>${esc(c.referred_by || '—')}</td><td>${esc(c.address || '—')}</td><td>${fmtDate(dateIn(c.created_at))}</td></tr>`).join('')}</tbody></table></div>${pagerHtml(custQ.page, count, PAGE)}</div>`;
   } catch (e) { if (tok === custToken) box.innerHTML = `<div class="card error-card"><p>${esc(friendlyError(e))}</p><button class="btn btn-primary" onclick="loadCustomers()">Retry</button></div>`; }
 }
 
-/* ---------- multi-item rental fields (used by "Add customer" and "New rental") ---------- */
+/* ---------- multi-item rental fields ---------- */
 async function loadEligibleItems() {
   const { data, error } = await sb.from('items').select('id,item_number,item_name,rental_price_per_day,image_path,thumb_path').eq('availability_status', 'Available').order('item_name').limit(500);
   if (error) throw error; return data;
@@ -393,6 +403,8 @@ async function openCustomerForm() {
     ${fieldHtml('Customer ID', 'customer_number', '<input name="customer_number" readonly placeholder="Generated automatically when saved (e.g. CUS-0001)">')}
     ${fieldHtml('Customer name *', 'full_name', '<input name="full_name" maxlength="100" autocomplete="off">')}
     ${fieldHtml('Phone number * (10-digit mobile)', 'phone', '<input name="phone" type="tel" inputmode="numeric" maxlength="16" placeholder="9876543210">')}
+    <div class="grid2">${fieldHtml('Reference number (optional)', 'reference_number', '<input name="reference_number" maxlength="100" placeholder="e.g. REF-1234">')}
+    ${fieldHtml('Referred by (optional)', 'referred_by', '<input name="referred_by" maxlength="100" placeholder="e.g. John Doe">')}</div>
     ${fieldHtml('Address (optional)', 'address', '<textarea name="address" rows="2" maxlength="300"></textarea>')}
     <div class="field"><span class="photo-label">Customer photo (optional)</span>${photoPickerHtml('photo')}</div>
     ${rentalFieldsHtml(items, false)}
@@ -410,6 +422,8 @@ async function openCustomerForm() {
       full_name: v => !v ? 'Customer name is required.' : !NAME_RE.test(v) ? 'Use letters only (2–100 characters).' : '',
       phone: v => !v ? 'Phone number is required.' : !PHONE_RE.test(normalizePhone(v)) ? 'Enter a valid 10-digit mobile number.' : '',
       address: v => v.length > 300 ? 'Address must be 300 characters or fewer.' : '',
+      reference_number: v => v.length > 100 ? 'Reference number must be 100 characters or fewer.' : '',
+      referred_by: v => v.length > 100 ? 'Referred by must be 100 characters or fewer.' : '',
       consent: (v, el) => el.checked ? '' : 'Customer consent is required.'
     };
     if (hasItems) Object.assign(rules, rentalRules(f));
@@ -424,13 +438,15 @@ async function openCustomerForm() {
           p_name: f.full_name.value.trim(), p_phone: normalizePhone(f.phone.value), p_address: f.address.value.trim() || null, p_photo_path: photo_path,
           p_items: hasItems ? picks.map(p => ({ item_id: p.item_id, price: Number(p.price) })) : null,
           p_start: hasItems ? f.start_date.value : null,
-          p_advance: hasItems ? Number(f.advance.value || 0) : 0, p_advance_method: f.advance_method.value });
+          p_advance: hasItems ? Number(f.advance.value || 0) : 0, p_advance_method: f.advance_method.value,
+          p_reference_number: f.reference_number.value.trim() || null,
+          p_referred_by: f.referred_by.value.trim() || null });
         if (error) throw error;
         m.close(); route();
         showCreated(data.customer_number, data.rental, hasItems ? picks.length : 0);
       } catch (err) {
         if (up) removeFiles(CUST_BUCKET, up.uploaded);
-        toast(friendlyError(err), 'error');   // form stays filled in
+        toast(friendlyError(err), 'error');
       }
     });
   });
@@ -456,7 +472,13 @@ async function openCustomer(id) {
     if (c.error) throw c.error; if (r.error) throw r.error;
     const cu = c.data; await signPhotos([cu.photo_path, ...r.data.map(x => x.customer_photo_path)]);
     m.body.innerHTML = `<div class="detail-head">${avatar(cu.full_name, cu.photo_path, 'xl')}
-      <div><small>${esc(cu.customer_number)}</small><h2 style="margin:0">${esc(cu.full_name)}</h2><div>${esc(cu.phone_number)}</div><div class="muted">${esc(cu.address || 'No address')}</div></div></div>
+      <div><small>${esc(cu.customer_number)}</small><h2 style="margin:0">${esc(cu.full_name)}</h2>
+        <div class="phone-cell">${esc(cu.phone_number)}${callBtn(cu.phone_number)}</div>
+       ${cu.reference_number
+  ? `<div class="muted phone-cell">Reference: ${esc(cu.reference_number)}${callBtn(cu.reference_number)}</div>`
+  : ''}
+        ${cu.referred_by ? `<div class="muted">Referred by: ${esc(cu.referred_by)}</div>` : ''}
+        <div class="muted">${esc(cu.address || 'No address')}</div></div></div>
       <div class="actions"><button class="btn btn-primary" id="newRental">+ New rental</button></div>
       <div class="card" style="padding:14px;background:#fafbfe;box-shadow:none;border:1px solid var(--line)"><h3 style="margin-bottom:8px">📍 Live location</h3><div id="locBox">${loading()}</div></div>
       <h3>Rental history</h3>${rentalsTable(r.data)}`;
@@ -569,7 +591,13 @@ async function renderRental(m, id) {
   const adjusted = x.billed_days_override != null;
   m.body.innerHTML = `
     <div class="detail-head">${avatar(x.customer_name, x.customer_photo_path, 'xl')}
-      <div><small>${esc(x.customer_number)}</small><h2 style="margin:0">${esc(x.customer_name)}</h2><div>${esc(x.phone_number)}</div></div></div>
+      <div><small>${esc(x.customer_number)}</small><h2 style="margin:0">${esc(x.customer_name)}</h2>
+        <div class="phone-cell">${esc(x.phone_number)}${callBtn(x.phone_number)}</div>
+        ${x.reference_number
+  ? `<div class="muted phone-cell">Reference: ${esc(x.reference_number)}${callBtn(x.reference_number)}</div>`
+  : ''}
+        ${x.referred_by ? `<div class="muted">Referred by: ${esc(x.referred_by)}</div>` : ''}
+      </div></div>
     <h3 style="margin-top:16px">Items (${rows.length})</h3>
     <div class="table-wrap"><table class="tbl" style="min-width:420px"><thead><tr><th>Item</th><th class="r">Daily rent</th></tr></thead><tbody>${rows.map(y => `
       <tr><td><div class="who">${imgTag(y.items.thumb_path || y.items.image_path, y.items.item_name).replace('<img', '<img class="avatar" style="border-radius:8px"')}<div><b>${esc(y.items.item_name)}</b><small>${esc(y.items.item_number)}</small></div></div></td><td class="r">${money(y.agreed_daily_price)}</td></tr>`).join('')}
@@ -712,12 +740,13 @@ async function loadPayments() {
   try {
     const from = (payQ.page - 1) * PAGE;
     const { data, error, count } = await sb.from('payments')
-      .select('*, rentals(id, rental_number, customers(customer_number, full_name))', { count: 'exact' })
+      .select('*, rentals(id, rental_number, customers(customer_number, full_name, phone_number))', { count: 'exact' })
       .order('payment_date', { ascending: false }).range(from, from + PAGE - 1);
     if (error) throw error;
-    box.innerHTML = (!data.length ? empty('No payments recorded yet.') : `<div class="table-wrap"><table class="tbl"><thead><tr><th>Payment</th><th>Date</th><th>Customer</th><th>Rental</th><th>Method</th><th>Notes</th><th class="r">Amount</th><th></th></tr></thead><tbody>${data.map(y => `
+    box.innerHTML = (!data.length ? empty('No payments recorded yet.') : `<div class="table-wrap"><table class="tbl"><thead><tr><th>Payment</th><th>Date</th><th>Customer</th><th>Phone</th><th>Rental</th><th>Method</th><th>Notes</th><th class="r">Amount</th><th></th></tr></thead><tbody>${data.map(y => `
       <tr style="${y.voided ? 'opacity:.6' : ''}"><td>${esc(y.payment_number)}</td><td>${fmtDateTime(y.payment_date)}</td>
       <td><b>${esc(y.rentals?.customers?.full_name)}</b><small>${esc(y.rentals?.customers?.customer_number)}</small></td>
+      <td><div class="phone-cell">${esc(y.rentals?.customers?.phone_number || '')}${callBtn(y.rentals?.customers?.phone_number)}</div></td>
       <td><a href="#" data-rental="${y.rentals?.id}" onclick="return false">${esc(y.rentals?.rental_number)}</a></td><td>${esc(y.payment_method)}</td><td>${esc(y.notes || '')}</td>
       <td class="r" style="${y.voided ? 'text-decoration:line-through' : ''}">${money(y.amount)}</td>
       <td>${y.voided ? badge('VOIDED', 'gray') : `<button class="btn btn-light btn-sm" data-void="${y.id}">Void</button>`}</td></tr>`).join('')}</tbody></table></div>`) + pagerHtml(payQ.page, count, PAGE);
@@ -744,6 +773,7 @@ async function pickRentalForPayment() {
 async function fetchAll(q) { const { data, error } = await q.limit(5000); if (error) throw error; return data; }
 const RENTAL_COLS = [
   { key: 'rental_number', label: 'Rental' }, { key: 'customer_number', label: 'Customer ID' }, { key: 'customer_name', label: 'Customer' }, { key: 'phone_number', label: 'Phone' },
+  { key: 'reference_number', label: 'Reference' }, { key: 'referred_by', label: 'Referred by' },
   { key: 'items_text', label: 'Items' }, { key: 'start_date', label: 'Given', type: 'date' }, { key: 'returned_on', label: 'Returned' },
   { key: 'daily_total', label: 'Daily total', type: 'money' }, { key: 'chargeable_days', label: 'Days' },
   { key: 'total_charges', label: 'Charges', type: 'money' }, { key: 'total_paid', label: 'Paid', type: 'money' }, { key: 'balance', label: 'Balance', type: 'money' },
@@ -771,11 +801,12 @@ const REPORTS = {
     const rows = Object.values(g).sort((a, b) => a.month.localeCompare(b.month)); rows.push({ month: 'TOTAL', count: rows.reduce((s, r) => s + r.count, 0), total: rows.reduce((s, r) => s + r.total, 0) });
     return { cols: [{ key: 'month', label: 'Month' }, { key: 'count', label: 'Payments' }, { key: 'total', label: 'Collected', type: 'money' }], rows }; } },
   outstanding: { label: 'Outstanding customer balances', run: async () => {
-    const d = await fetchAll(sb.from('rental_summary').select('customer_number,customer_name,phone_number,balance,total_charges,total_paid').gt('balance', 0)); const g = {};
-    d.forEach(r => { const k = r.customer_number; g[k] = g[k] || { customer_number: k, customer_name: r.customer_name, phone_number: r.phone_number, rentals: 0, charges: 0, paid: 0, balance: 0 };
+    const d = await fetchAll(sb.from('rental_summary').select('customer_number,customer_name,phone_number,balance,total_charges,total_paid,reference_number,referred_by').gt('balance', 0)); const g = {};
+    d.forEach(r => { const k = r.customer_number; g[k] = g[k] || { customer_number: k, customer_name: r.customer_name, phone_number: r.phone_number, reference_number: r.reference_number, referred_by: r.referred_by, rentals: 0, charges: 0, paid: 0, balance: 0 };
       g[k].rentals++; g[k].charges += Number(r.total_charges); g[k].paid += Number(r.total_paid); g[k].balance += Number(r.balance); });
     const rows = Object.values(g).sort((a, b) => b.balance - a.balance);
-    return { cols: [{ key: 'customer_number', label: 'Customer ID' }, { key: 'customer_name', label: 'Customer' }, { key: 'phone_number', label: 'Phone' }, { key: 'rentals', label: 'Rentals' },
+    return { cols: [{ key: 'customer_number', label: 'Customer ID' }, { key: 'customer_name', label: 'Customer' }, { key: 'phone_number', label: 'Phone' },
+      { key: 'reference_number', label: 'Reference' }, { key: 'referred_by', label: 'Referred by' }, { key: 'rentals', label: 'Rentals' },
       { key: 'charges', label: 'Charges', type: 'money' }, { key: 'paid', label: 'Paid', type: 'money' }, { key: 'balance', label: 'Balance', type: 'money' }], rows }; } },
   customer: { label: 'Customer rental history', ref: 'Customer ID (e.g. CUS-0001)', run: async (f, t, ref) => ({ cols: RENTAL_COLS, rows: rentalRows(await fetchAll(sb.from('rental_summary').select('*').ilike('customer_number', cleanQ(ref)).order('start_date', { ascending: false }))) }) },
   item: { label: 'Item rental history', ref: 'Item number (e.g. ITM-0001)', run: async (f, t, ref) => ({ cols: RENTAL_COLS, rows: rentalRows(await fetchAll(sb.from('rental_summary').select('*').ilike('items_text', `%${cleanQ(ref)}%`).order('start_date', { ascending: false }))) }) }
